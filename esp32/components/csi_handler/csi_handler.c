@@ -26,7 +26,7 @@ static bool    s_baseline_done = false;
 // Waterfall history: 32 columns, each = one amplitude snapshot
 #define WATERFALL_COLS   32
 static uint8_t s_waterfall[WATERFALL_COLS];
-static int     s_wf_idx = 0;
+
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
