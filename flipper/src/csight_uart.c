@@ -17,7 +17,7 @@ static int32_t uart_rx_thread(void* ctx) {
 
         // Block until data arrives — short timeout so stop flag is checked regularly
         size_t len = furi_stream_buffer_receive(
-            app->rx_stream, buf, sizeof(buf), pdMS_TO_TICKS(50));
+            app->rx_stream, buf, sizeof(buf), furi_ms_to_ticks(50));
         if (len == 0) continue;
 
         size_t i = 0;
