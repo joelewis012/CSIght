@@ -1,0 +1,163 @@
+name: CSIght Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+
+  # ─── ESP32 Firmware ──────────────────────────────────────────────────────────
+  build-esp32:
+    name: ESP32 Firmware (ESP-IDF)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ESP32 firmware
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.2.1
+          target: esp32s3
+          path: esp32
+          command: idf.py build
+
+      - name: Collect firmware files
+        run: |
+          mkdir -p fw-out
+          cp esp32/build/bootloader/bootloader.bin        fw-out/ || true
+          cp esp32/build/partition_table/partition-table.bin fw-out/ || true
+          cp esp32/build/csight_esp32.bin                 fw-out/ || true
+          cp esp32/build/flash_args                       fw-out/ || true
+          ls -la fw-out/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csight-esp32-firmware
+          path: fw-out/
+          if-no-files-found: error
+
+  # ─── Flipper FAP — Official ──────────────────────────────────────────────────
+  build-fap-official:
+    name: Flipper FAP (Official)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uFBT
+        run: pip3 install ufbt
+
+      - name: Update SDK and build
+        working-directory: flipper
+        run: |
+          ufbt update --channel release
+          ufbt
+          echo "--- dist contents ---"
+          find dist/ -type f 2>/dev/null || echo "No dist folder"
+          find . -name "*.fap" 2>/dev/null || echo "No FAP found"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csight-official
+          path: flipper/dist/**/*.fap
+          if-no-files-found: error
+
+  # ─── Flipper FAP — Momentum ──────────────────────────────────────────────────
+  build-fap-momentum:
+    name: Flipper FAP (Momentum)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uFBT
+        run: pip3 install ufbt
+
+      - name: Update SDK and build
+        working-directory: flipper
+        run: |
+          ufbt update --index-url https://up.momentum-fw.dev/firmware/directory.json --channel release
+          ufbt
+          echo "--- dist contents ---"
+          find dist/ -type f 2>/dev/null || echo "No dist folder"
+          find . -name "*.fap" 2>/dev/null || echo "No FAP found"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csight-momentum
+          path: flipper/dist/**/*.fap
+          if-no-files-found: error
+
+  # ─── Flipper FAP — Unleashed ─────────────────────────────────────────────────
+  build-fap-unleashed:
+    name: Flipper FAP (Unleashed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uFBT
+        run: pip3 install ufbt
+
+      - name: Update SDK and build
+        working-directory: flipper
+        run: |
+          ufbt update --index-url https://up.unleashedflip.com/directory.json --channel release
+          ufbt
+          echo "--- dist contents ---"
+          find dist/ -type f 2>/dev/null || echo "No dist folder"
+          find . -name "*.fap" 2>/dev/null || echo "No FAP found"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csight-unleashed
+          path: flipper/dist/**/*.fap
+          if-no-files-found: error
+
+  # ─── Package release ZIP ─────────────────────────────────────────────────────
+  package:
+    name: Package Release
+    needs: [build-esp32, build-fap-official, build-fap-momentum, build-fap-unleashed]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Show artifact contents
+        run: find artifacts/ -type f | sort
+
+      - name: Build release ZIP
+        run: |
+          mkdir -p release/CSIght/flipper/official
+          mkdir -p release/CSIght/flipper/momentum
+          mkdir -p release/CSIght/flipper/unleashed
+          mkdir -p release/CSIght/esp32
+
+          find artifacts/csight-official   -name "*.fap" -exec cp {} release/CSIght/flipper/official/  \; || true
+          find artifacts/csight-momentum   -name "*.fap" -exec cp {} release/CSIght/flipper/momentum/  \; || true
+          find artifacts/csight-unleashed  -name "*.fap" -exec cp {} release/CSIght/flipper/unleashed/ \; || true
+          cp artifacts/csight-esp32-firmware/* release/CSIght/esp32/ || true
+          cp README.md FLASH_INSTRUCTIONS.md LICENSE release/CSIght/
+
+          VERSION="${GITHUB_REF_NAME:-dev}"
+          ZIP="CSIght-${VERSION}.zip"
+          cd release && zip -r "../$ZIP" CSIght/
+          cd ..
+          ls -lh "$ZIP"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CSIght-release
+          path: CSIght-*.zip
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: CSIght-*.zip
+          generate_release_notes: true
