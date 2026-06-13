@@ -33,7 +33,9 @@ static int32_t uart_rx_thread(void* ctx) {
                     if (i + payload_len > len) break;
 
                     // null-terminated chip name
-                    size_t name_len = strnlen((char*)&buf[i], payload_len);
+                    // strnlen not in Flipper SDK — manual bounded strlen
+                    size_t name_len = 0;
+                    while(name_len < payload_len && buf[i + name_len] != '\0') name_len++;
                     if (name_len >= sizeof(app->chip_name)) name_len = sizeof(app->chip_name) - 1;
                     memcpy(app->chip_name, &buf[i], name_len);
                     app->chip_name[name_len] = '\0';
