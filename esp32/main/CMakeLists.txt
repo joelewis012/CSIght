@@ -8,4 +8,6 @@ idf_component_register(
         driver
         esp_system
         freertos
+    PRIV_REQUIRES
+        csi_handler
 )
