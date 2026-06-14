@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200">
+  <defs>
+    <radialGradient id="radarGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#00ff88;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#00ff88;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="textGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="200" fill="#0a0a0a" rx="12"/>
+
+  <!-- Radar circle glow -->
+  <circle cx="100" cy="100" r="75" fill="url(#radarGlow)"/>
+
+  <!-- Radar rings -->
+  <circle cx="100" cy="100" r="72" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.3" filter="url(#glow)"/>
+  <circle cx="100" cy="100" r="50" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.4" filter="url(#glow)"/>
+  <circle cx="100" cy="100" r="28" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.5" filter="url(#glow)"/>
+
+  <!-- Crosshairs -->
+  <line x1="100" y1="28" x2="100" y2="172" stroke="#00ff88" stroke-width="0.5" opacity="0.2"/>
+  <line x1="28" y1="100" x2="172" y2="100" stroke="#00ff88" stroke-width="0.5" opacity="0.2"/>
+
+  <!-- Radar sweep (at ~45 degrees) -->
+  <line x1="100" y1="100" x2="151" y2="49" stroke="#00ff88" stroke-width="2" opacity="0.9" filter="url(#glow)"/>
+
+  <!-- Sweep trail -->
+  <line x1="100" y1="100" x2="162" y2="72" stroke="#00ff88" stroke-width="1.5" opacity="0.4"/>
+  <line x1="100" y1="100" x2="168" y2="88" stroke="#00ff88" stroke-width="1" opacity="0.2"/>
+
+  <!-- Blips -->
+  <rect x="128" y="62" width="5" height="5" fill="#00ff88" filter="url(#glow)" opacity="0.95"/>
+  <rect x="58" y="55" width="3" height="3" fill="#00ff88" filter="url(#glow)" opacity="0.6"/>
+  <rect x="142" y="118" width="3" height="3" fill="#00ff88" filter="url(#glow)" opacity="0.4"/>
+
+  <!-- Center dot -->
+  <circle cx="100" cy="100" r="3" fill="#00ff88" filter="url(#glow)"/>
+
+  <!-- Divider line -->
+  <line x1="185" y1="30" x2="185" y2="170" stroke="#00ff88" stroke-width="0.5" opacity="0.3"/>
+
+  <!-- CSIght text -->
+  <text x="210" y="115" font-family="'Courier New', monospace" font-size="72" font-weight="bold"
+        fill="#00ff88" filter="url(#textGlow)" letter-spacing="-2">CSIght</text>
+
+  <!-- Tagline -->
+  <text x="212" y="148" font-family="'Courier New', monospace" font-size="16"
+        fill="#00ff88" opacity="0.6" letter-spacing="3">WiFi CSI RADAR · FLIPPER ZERO</text>
+
+  <!-- Corner decoration - signal bars top right -->
+  <rect x="745" y="25" width="6" height="20" fill="#00ff88" opacity="0.3"/>
+  <rect x="756" y="18" width="6" height="27" fill="#00ff88" opacity="0.5"/>
+  <rect x="767" y="11" width="6" height="34" fill="#00ff88" opacity="0.7"/>
+  <rect x="778" y="4"  width="6" height="41" fill="#00ff88" opacity="0.9" filter="url(#glow)"/>
+
+  <!-- Bottom status line -->
+  <text x="212" y="178" font-family="'Courier New', monospace" font-size="11"
+        fill="#00ff88" opacity="0.35" letter-spacing="1">SCANNING · TARGET DETECTION · PROXIMITY ESTIMATION</text>
+</svg>

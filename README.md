@@ -1,23 +1,19 @@
 <div align="center">
 
-<pre>
- ██████╗███████╗██╗ ██████╗ ██╗  ██╗████████╗
-██╔════╝██╔════╝██║██╔════╝ ██║  ██║╚══██╔══╝
-██║     ███████╗██║██║  ███╗███████║   ██║
-██║     ╚════██║██║██║   ██║██╔══██║   ██║
-╚██████╗███████║██║╚██████╔╝██║  ██║   ██║
- ╚═════╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝
-</pre>
+<img src="csight_logo.svg" alt="CSIght" width="700"/>
 
-### WiFi CSI Radar for Flipper Zero + ESP32
+<br/>
 
 **See through walls. No cameras. No IR. Just WiFi.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/joelewis012/CSIght?style=flat-square&color=green&label=Latest%20Release)](https://github.com/joelewis012/CSIght/releases/latest)
 [![Firmware: Official](https://img.shields.io/badge/firmware-Official-blue?style=flat-square)]()
 [![Firmware: Momentum](https://img.shields.io/badge/firmware-Momentum-purple?style=flat-square)]()
 [![Firmware: Unleashed](https://img.shields.io/badge/firmware-Unleashed-red?style=flat-square)]()
 [![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.2-orange?style=flat-square)]()
+
+### [⬇ Download Latest Release](https://github.com/joelewis012/CSIght/releases/latest)
 
 </div>
 
@@ -47,9 +43,9 @@ No special hardware. No cameras. No IR sensors. Just the WiFi radio already sitt
     Radar Mode           Waterfall Mode      Proximity Mode
 ```
 
-**Radar** — rotating sweep with fading blips. Motion triggers a `TARGET ACQUIRED` flash.  
-**Waterfall** — scrolling history of CSI amplitude across all subcarriers. Looks incredible.  
-**Proximity** — concentric arc display showing estimated distance to the detected target.
+**Radar** — rotating sweep with fading blips. Motion triggers a `TARGET ACQUIRED` flash.
+**Waterfall** — scrolling history of CSI amplitude across all subcarriers.
+**Proximity** — concentric arc display showing estimated distance to detected target.
 
 Switch modes with `←` / `→` during scanning.
 
@@ -61,7 +57,7 @@ Switch modes with `←` / `→` during scanning.
 - **40+ board presets** — covers official Flipper boards, DevKits, XIAO, Adafruit, SparkFun, M5Stack, LOLIN, and more
 - **Custom pin override** — set any TX/RX pair, saved to SD card so you only do it once
 - **Three display modes** — radar sweep, waterfall, proximity — switchable live
-- **Adjustable sensitivity** — tune the detection threshold on the fly
+- **Adjustable sensitivity** — tune detection threshold on the fly
 - **Proximity estimation** — rough distance to detected motion using signal delta strength
 - **Zero configuration on known boards** — preset auto-populates pins from firmware handshake
 
@@ -77,11 +73,11 @@ Switch modes with `←` / `→` during scanning.
 | ESP32-C3 | ✅ Full | Great budget option |
 | ESP32-C6 | ✅ Full | WiFi 6, best sensitivity |
 | ESP32-C61 | ✅ Full | C6 without 802.15.4 |
-| ESP32 (original) | ⚠️ Limited | Older CSI API, amplitude only |
+| ESP32 (original) | ⚠️ Limited | Amplitude only, motion detection still works |
 | ESP32-S2 | ❌ None | No WiFi CSI support |
 | ESP32-H2 | ❌ None | 802.15.4 only, no WiFi |
 
-> **Full** = amplitude + phase across all subcarriers → better proximity accuracy  
+> **Full** = amplitude + phase across all subcarriers → better proximity accuracy
 > **Limited** = amplitude only → motion detection works, proximity less precise
 
 ### Flipper firmware
@@ -108,25 +104,42 @@ Switch modes with `←` / `→` during scanning.
 
 ## Installation
 
-### 1. Flash the ESP32 firmware
+### 1. Download
 
-See **[FLASH_INSTRUCTIONS.md](FLASH_INSTRUCTIONS.md)** for the full flashing guide, wiring diagram, and recovery steps.
+Grab the latest release ZIP from the [Releases page](https://github.com/joelewis012/CSIght/releases/latest). It contains:
 
-Quick start (replace port as needed):
+```
+CSIght/
+├── flipper/
+│   ├── official/    csight.fap
+│   ├── momentum/    csight.fap
+│   └── unleashed/   csight.fap
+└── esp32/
+    ├── bootloader.bin
+    ├── partition-table.bin
+    ├── csight_esp32.bin
+    └── flash_args
+```
+
+### 2. Flash the ESP32
+
+See **[FLASH_INSTRUCTIONS.md](FLASH_INSTRUCTIONS.md)** for the full guide and wiring diagram.
+
+Quick start:
 
 ```bash
 pip install esptool
 
 esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 \
   write_flash \
-  0x1000  esp32/bootloader.bin \
-  0x8000  esp32/partition-table.bin \
-  0x10000 esp32/csight_esp32.bin
+  0x1000  bootloader.bin \
+  0x8000  partition-table.bin \
+  0x10000 csight_esp32.bin
 ```
 
-### 2. Install the Flipper FAP
+### 3. Install the FAP
 
-Copy the `.fap` matching your firmware to your Flipper SD card:
+Copy the `.fap` matching your Flipper firmware to:
 
 ```
 SD Card/apps/GPIO/csight.fap
@@ -134,7 +147,7 @@ SD Card/apps/GPIO/csight.fap
 
 Launch from **Apps → GPIO → CSIght**.
 
-### 3. Wire it up
+### 4. Wire it up
 
 | ESP32 pin | Flipper GPIO |
 |-----------|-------------|
@@ -143,22 +156,20 @@ Launch from **Apps → GPIO → CSIght**.
 | GND | GND |
 | 3.3V | 3.3V |
 
-Pins are configurable inside the app — you only need to set them once.
+Pins are configurable inside the app — saved to SD, set once.
 
 ---
 
 ## Building from source
 
-Push to `main` to trigger the GitHub Actions build. It compiles for all three Flipper firmware targets and packages everything into a release ZIP automatically.
-
-Manual build:
+Push to `main` to trigger the GitHub Actions build. It compiles all three Flipper firmware targets and packages everything into a release ZIP. Tag with `v1.0` to publish a GitHub Release automatically.
 
 ```bash
 # ESP32 firmware (requires ESP-IDF v5.2+)
 cd esp32
 idf.py build
 
-# Flipper FAP (official firmware)
+# Flipper FAP
 cd flipper
 ufbt
 ```
@@ -176,6 +187,4 @@ ufbt
 
 ## License
 
-MIT © CSIght contributors
-
-See [LICENSE](LICENSE) for full terms.
+MIT © CSIght contributors — see [LICENSE](LICENSE) for full terms.
