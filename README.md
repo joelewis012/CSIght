@@ -16,43 +16,67 @@
 [![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.2-orange?style=flat-square)]()
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-support-yellow?style=flat-square&logo=buy-me-a-coffee)](https://buymeacoffee.com/Joelewis012)
 
-### [⬇ Download Latest Release](https://github.com/joelewis012/CSIght/releases/latest)  ·  [☕ Buy Me a Coffee](https://buymeacoffee.com/Joelewis012)
+### [⬇ Download Latest Release](https://github.com/joelewis012/CSIght/releases/latest) &nbsp;·&nbsp; [☕ Buy Me a Coffee](https://buymeacoffee.com/Joelewis012)
 
 </div>
 
------
+---
 
 ## What is CSIght?
 
-Every WiFi packet that moves through a room carries hidden data about that room — the amplitude, phase, and propagation delay of the signal across dozens of frequency subcarriers. When something moves, those values shift. CSIght reads those shifts in real time using your ESP32’s WiFi hardware and renders them on your Flipper Zero as a live radar display.
+Every WiFi packet that moves through a room carries hidden data about that room — the amplitude, phase, and propagation delay of the signal across dozens of frequency subcarriers. When something moves, those values shift. CSIght reads those shifts in real time using your ESP32's WiFi hardware and renders them on your Flipper Zero as a live radar display.
 
 No special hardware. No cameras. No IR sensors. Just the WiFi radio already sitting on your ESP32 expansion board.
 
------
+---
 
 ## Displays
 
+**Radar Mode**
 ```
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│    CSIght       │  │CSIght WATERFALL │  │    CSIght       │
-│   ·  ·  ·       │  │█░░░░░░░░░░░░█░░│  │   PROXIMITY     │
-│  · ╭───╮ ·      │  │█░░░░█░░░░░░░█░░│  │                 │
-│  · │ ╱ │ · MOTION│  │█░░░░█░░█░░░░█░░│  │   ○             │
-│  · ╰───╯ · ████│  │█░░░░█░░█░░█░█░░│  │  ○○○            │
-│  · · ● · ·  RANGE│  │█░██░█░░█░░█░█░█│  │ ○○○○○          │
-│  · · · · ·  ████│  │                 │  │    ■            │
-│         SENS: 7 │  │            S:7  │  │   72%           │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
-    Radar Mode           Waterfall Mode      Proximity Mode
+┌──────────────────────────┐
+│ CSIght                   │
+│  · ╭────╮ ·   MOTION     │
+│  · │ ╱  │ ·   ████       │
+│  · ╰────╯ ·   RANGE      │
+│  · · ● · ·    ████       │
+│              SENS: 7     │
+└──────────────────────────┘
+Sweep rotates, blips fade.
+Motion triggers TARGET ACQUIRED flash.
 ```
 
-**Radar** — rotating sweep with fading blips. Motion triggers a `TARGET ACQUIRED` flash.
-**Waterfall** — scrolling history of CSI amplitude across all subcarriers.
-**Proximity** — concentric arc display showing estimated distance to detected target.
+**Waterfall Mode**
+```
+┌──────────────────────────┐
+│ CSIght  WATERFALL        │
+│ █░░░░░░░░░░░░█░░░░░░░░░░ │
+│ █░░░░█░░░░░░░█░░░░░░░░░░ │
+│ █░░░░█░░█░░░░█░░░░░░░░░░ │
+│ █░░░░█░░█░░█░█░░░░░░░░░░ │
+│ █░██░█░░█░░█░█░░░░░░░░░█ │
+│                      S:7 │
+└──────────────────────────┘
+Scrolling CSI amplitude history.
+```
+
+**Proximity Mode**
+```
+┌──────────────────────────┐
+│         CSIght           │
+│        PROXIMITY         │
+│           ○              │
+│          ○○○             │
+│         ○○○○○            │
+│           ■              │
+│          72%             │
+└──────────────────────────┘
+Concentric arcs show distance.
+```
 
 Switch modes with `←` / `→` during scanning.
 
------
+---
 
 ## Features
 
@@ -64,58 +88,57 @@ Switch modes with `←` / `→` during scanning.
 - **Proximity estimation** — rough distance to detected motion using signal delta strength
 - **Zero configuration on known boards** — preset auto-populates pins from firmware handshake
 
------
+---
 
 ## Compatibility
 
 ### ESP32 firmware — which folder is mine?
 
-|Firmware folder |Chip            |Boards                                                                                                                                                                                                                                                                                                                                                              |
-|----------------|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|`esp32/esp32/`  |ESP32 (original)|ESP32-WROOM-32, ESP32-WROOM-32U, ESP32-WROOM-32UE, ESP32-WROVER, ESP32-WROVER-B, NodeMCU-32S, FZ WiFi Dev Board, FZ WiFi Dev Board Pro, FlipMods Mini WiFi, FlipMods Combo, FEBERIS, Marauder Double Barrel, AI-Thinker ESP32-CAM, LOLIN D32, LOLIN D32 Pro, WEMOS D1 Mini32, Adafruit HUZZAH32, SparkFun ESP32 Thing, M5Stack Core, M5Stack Core2, Olimex ESP32-EVB|
-|`esp32/esp32s3/`|ESP32-S3        |ESP32-S3 DevKitC-1, ESP32-S3 DevKitM-1, XIAO ESP32-S3, LOLIN S3, TinyS3, FeatherS3, ProS3, Adafruit QT Py ESP32-S3, M5Stamp S3, Olimex ESP32-S3-DevKit                                                                                                                                                                                                              |
-|`esp32/esp32c3/`|ESP32-C3        |ESP32-C3 DevKitC-02, ESP32-C3 DevKitM-1, XIAO ESP32-C3, LOLIN C3 Mini, Adafruit QT Py ESP32-C3, M5Stamp C3, SparkFun ESP32-C3                                                                                                                                                                                                                                       |
-|`esp32/esp32c6/`|ESP32-C6        |ESP32-C6 DevKitC-1, ESP32-C6 DevKitM-1, ESP32-C61 DevKitC-1, XIAO ESP32-C6, SparkFun C6 Qwiic Pocket                                                                                                                                                                                                                                                                |
+| Firmware folder | Chip | Boards |
+|----------------|------|--------|
+| `esp32/esp32/` | ESP32 (original) | ESP32-WROOM-32, ESP32-WROOM-32U, ESP32-WROOM-32UE, ESP32-WROVER, ESP32-WROVER-B, NodeMCU-32S, FZ WiFi Dev Board, FZ WiFi Dev Board Pro, FlipMods Mini WiFi, FlipMods Combo, FEBERIS, Marauder Double Barrel, AI-Thinker ESP32-CAM, LOLIN D32, LOLIN D32 Pro, WEMOS D1 Mini32, Adafruit HUZZAH32, SparkFun ESP32 Thing, M5Stack Core, M5Stack Core2, Olimex ESP32-EVB |
+| `esp32/esp32s3/` | ESP32-S3 | ESP32-S3 DevKitC-1, ESP32-S3 DevKitM-1, XIAO ESP32-S3, LOLIN S3, TinyS3, FeatherS3, ProS3, Adafruit QT Py ESP32-S3, M5Stamp S3, Olimex ESP32-S3-DevKit |
+| `esp32/esp32c3/` | ESP32-C3 | ESP32-C3 DevKitC-02, ESP32-C3 DevKitM-1, XIAO ESP32-C3, LOLIN C3 Mini, Adafruit QT Py ESP32-C3, M5Stamp C3, SparkFun ESP32-C3 |
+| `esp32/esp32c6/` | ESP32-C6 | ESP32-C6 DevKitC-1, ESP32-C6 DevKitM-1, ESP32-C61 DevKitC-1, XIAO ESP32-C6, SparkFun C6 Qwiic Pocket |
 
 ### CSI quality by chip
 
-|Chip                       |CSI Support  |Notes                                         |
-|---------------------------|-------------|----------------------------------------------|
-|ESP32-C6                   |✅ Full       |WiFi 6, excellent sensitivity                 |
-|ESP32-C61                  |✅ Full       |C6 without 802.15.4                           |
-|ESP32-C3                   |✅ Full       |Great budget option                           |
-|ESP32-S3                   |✅ Full       |Recommended all-rounder                       |
-|ESP32 (original)           |⚠️ Limited    |Motion detection works, proximity less precise|
-|ESP32-WROOM-32 / 32U / 32UE|⚠️ Limited    |Same original ESP32 chip, amplitude only      |
-|ESP32-S2                   |❌ None       |No WiFi CSI support                           |
-|ESP32-H2                   |❌ None       |802.15.4 only, no WiFi                        |
-|ESP32-C5                   |🔜 Coming soon|Requires ESP-IDF v5.5 — not yet supported     |
-
+| Chip | CSI Support | Notes |
+|------|-------------|-------|
+| ESP32-C6 | ✅ Full | WiFi 6, excellent sensitivity |
+| ESP32-C61 | ✅ Full | C6 without 802.15.4 |
+| ESP32-C3 | ✅ Full | Great budget option |
+| ESP32-S3 | ✅ Full | Recommended all-rounder |
+| ESP32 (original) | ⚠️ Limited | Motion detection works, proximity less precise |
+| ESP32-WROOM-32 / 32U / 32UE | ⚠️ Limited | Same original ESP32 chip, amplitude only |
+| ESP32-S2 | ❌ None | No WiFi CSI support |
+| ESP32-H2 | ❌ None | 802.15.4 only, no WiFi |
+| ESP32-C5 | 🔜 Coming soon | Requires ESP-IDF v5.5 — not yet supported |
 
 > **Full** = amplitude + phase across all subcarriers → best accuracy
 > **Limited** = amplitude only → motion detection still works fine
 
 ### Flipper firmware — which FAP is mine?
 
-|FAP folder          |Use if you run        |
-|--------------------|----------------------|
-|`flipper/official/` |Stock Flipper firmware|
-|`flipper/momentum/` |Momentum firmware     |
-|`flipper/unleashed/`|Unleashed firmware    |
+| FAP folder | Use if you run |
+|-----------|----------------|
+| `flipper/official/` | Stock Flipper firmware |
+| `flipper/momentum/` | Momentum firmware |
+| `flipper/unleashed/` | Unleashed firmware |
 
------
+---
 
 ## Controls
 
-|Button   |Scanning mode      |Setup screens    |
-|---------|-------------------|-----------------|
-|`←` / `→`|Switch display mode|—                |
-|`↑`      |Sensitivity up     |Next option      |
-|`↓`      |Sensitivity down   |Previous option  |
-|`OK`     |—                  |Confirm selection|
-|`Back`   |Exit app           |Go back          |
+| Button | Scanning mode | Setup screens |
+|--------|--------------|---------------|
+| `←` / `→` | Switch display mode | — |
+| `↑` | Sensitivity up | Next option |
+| `↓` | Sensitivity down | Previous option |
+| `OK` | — | Confirm selection |
+| `Back` | Exit app | Go back |
 
------
+---
 
 ## Installation
 
@@ -138,7 +161,7 @@ CSIght/
 
 ### 2. Flash the ESP32
 
-See **<FLASH_INSTRUCTIONS.md>** for the full guide and wiring diagram.
+See **[FLASH_INSTRUCTIONS.md](FLASH_INSTRUCTIONS.md)** for the full guide and wiring diagram.
 
 Quick start:
 
@@ -164,16 +187,16 @@ Launch from **Apps → GPIO → CSIght**.
 
 ### 4. Wire it up
 
-|ESP32 pin      |Flipper GPIO|
-|---------------|------------|
-|TX (default 17)|Pin 14      |
-|RX (default 16)|Pin 13      |
-|GND            |GND         |
-|3.3V           |3.3V        |
+| ESP32 pin | Flipper GPIO |
+|-----------|-------------|
+| TX (default 17) | Pin 14 |
+| RX (default 16) | Pin 13 |
+| GND | GND |
+| 3.3V | 3.3V |
 
 Pins are configurable inside the app — saved to SD, set once.
 
------
+---
 
 ## Building from source
 
@@ -189,20 +212,25 @@ cd flipper
 ufbt
 ```
 
------
+---
 
 ## Roadmap
 
-|Version|Feature                                            |
-|-------|---------------------------------------------------|
-|v1.x   |Breathing detection (experimental)                 |
-|v2.0   |Multi-ESP32 node support for true directional radar|
+| Version | Feature |
+|---------|---------|
+| v1.1 | C3 Super Mini + more board presets |
+| v1.2 | Standalone Web UI — ESP32 hosts radar in browser, no Flipper needed |
+| v1.3 | Flipper Web UI toggle — switch between Flipper display and browser via QR code |
+| v1.4 | ESP32 screen support — M5Stack, TTGO T-Display, Lilygo T-Display S3 |
+| v1.x | Breathing detection (experimental) |
+| v2.0 | Multi-ESP32 node support for true directional radar |
+| v2.1 | ESP32-C5 support (requires ESP-IDF v5.5) |
 
------
+---
 
 ## Legal
 
-CSIght is intended for use on hardware you own, in spaces you have permission to monitor. WiFi CSI reads signal metadata from your own radio hardware — it does not intercept, decode, or store anyone’s network traffic or communications.
+CSIght is intended for use on hardware you own, in spaces you have permission to monitor. WiFi CSI reads signal metadata from your own radio hardware — it does not intercept, decode, or store anyone's network traffic or communications.
 
 **You are responsible for ensuring your use of CSIght complies with the laws of your country and region.** In particular:
 
@@ -212,7 +240,7 @@ CSIght is intended for use on hardware you own, in spaces you have permission to
 
 This project is provided in good faith for hobbyist, research, and educational purposes.
 
------
+---
 
 ## Support
 
@@ -220,8 +248,8 @@ If CSIght is useful to you, a coffee goes a long way 👇
 
 [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/Joelewis012)
 
------
+---
 
 ## License
 
-MIT © CSIght contributors — see <LICENSE> for full terms.
+MIT © CSIght contributors — see [LICENSE](LICENSE) for full terms.
