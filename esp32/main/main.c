@@ -72,6 +72,7 @@ static int build_handshake(uint8_t *buf, size_t buf_size) {
     int i = 0;
     buf[i++] = PROTO_HANDSHAKE_ACK;
     buf[i++] = payload_len;
+    if((size_t)i + name_len + 1 > buf_size) return -1;
     memcpy(&buf[i], name, name_len + 1);
     i += (int)name_len + 1;
     buf[i++] = support;
