@@ -156,8 +156,8 @@ void csight_tick(CSIghtApp* app) {
     if(app->state == AppStateBooting) {
         app->boot_frame++;
         if(app->boot_frame > 40) {
-            csight_send_handshake(app);
-            app->state      = AppStateConnecting;
+            // After boot animation show power warning first
+            app->state      = AppStatePowerWarning;
             app->boot_frame = 0;
         }
     }
@@ -176,6 +176,16 @@ static void handle_input(CSIghtApp* app, InputKey key, InputType type) {
     if(type != InputTypeShort && type != InputTypeLong) return;
 
     switch(app->state) {
+
+        case AppStatePowerWarning:
+            if(key == InputKeyOk) {
+                // User confirmed board is powered — safe to init UART now
+                csight_uart_init(app);
+                csight_send_handshake(app);
+                app->state      = AppStateConnecting;
+                app->boot_frame = 0;
+            }
+            break;
 
         case AppStateCompatCheck:
             if(key == InputKeyOk && app->csi_support > 0) {
@@ -240,6 +250,11 @@ static void draw_cb(Canvas* c, void* ctx) {
 
     switch(app->state) {
         case AppStateBooting:
+            csight_draw_boot(c, app);
+            break;
+        case AppStatePowerWarning:
+            csight_draw_power_warning(c, app);
+            break;
         case AppStateConnecting:
             csight_draw_boot(c, app);
             break;
@@ -294,13 +309,17 @@ CSIghtApp* csight_app_alloc(void) {
     view_port_input_callback_set(app->view_port, input_cb, app);
     gui_add_view_port(app->gui, app->view_port, GuiLayerFullscreen);
 
-    csight_uart_init(app);
+    // UART init is deferred until after power warning is confirmed
+    // to prevent crashing if ESP32 is not yet powered
 
     return app;
 }
 
 void csight_app_free(CSIghtApp* app) {
-    csight_uart_deinit(app);
+    // Only deinit UART if it was actually initialised
+    if(app->serial != NULL) {
+        csight_uart_deinit(app);
+    }
     gui_remove_view_port(app->gui, app->view_port);
     view_port_free(app->view_port);
     furi_record_close(RECORD_GUI);

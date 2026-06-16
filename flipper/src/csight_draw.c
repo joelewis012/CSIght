@@ -76,6 +76,23 @@ void csight_draw_boot(Canvas* c, CSIghtApp* app) {
     draw_centered_str(c, 56, "WiFi CSI Radar");
 }
 
+// ─── Power warning screen ─────────────────────────────────────────────────────
+void csight_draw_power_warning(Canvas* c, CSIghtApp* app) {
+    UNUSED(app);
+    canvas_clear(c);
+
+    canvas_set_font(c, FontPrimary);
+    draw_centered_str(c, 12, "! BEFORE YOU START !");
+
+    canvas_set_font(c, FontSecondary);
+    canvas_draw_str(c, 2, 26, "Make sure your ESP32");
+    canvas_draw_str(c, 2, 36, "board is powered BEFORE");
+    canvas_draw_str(c, 2, 46, "launching this app.");
+    canvas_draw_str(c, 2, 56, "USB or 5V pin required.");
+
+    canvas_draw_str(c, 2, 64, "[OK] Continue  [Back] Exit");
+}
+
 // ─── Compatibility check ──────────────────────────────────────────────────────
 void csight_draw_compat(Canvas* c, CSIghtApp* app) {
     canvas_clear(c);

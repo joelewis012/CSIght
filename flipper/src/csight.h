@@ -42,6 +42,7 @@ typedef enum {
 // ─── App state ────────────────────────────────────────────────────────────────
 typedef enum {
     AppStateBooting,
+    AppStatePowerWarning,
     AppStateConnecting,
     AppStateCompatCheck,
     AppStatePresetSelect,
@@ -131,6 +132,7 @@ void csight_send_sensitivity(CSIghtApp* app);
 void csight_send_mode(CSIghtApp* app);
 
 void csight_draw_boot(Canvas* c, CSIghtApp* app);
+void csight_draw_power_warning(Canvas* c, CSIghtApp* app);
 void csight_draw_compat(Canvas* c, CSIghtApp* app);
 void csight_draw_preset(Canvas* c, CSIghtApp* app);
 void csight_draw_radar(Canvas* c, CSIghtApp* app);
