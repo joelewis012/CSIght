@@ -7,9 +7,9 @@
 **See through walls. No cameras. No IR. Just WiFi.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/joelewis012/CSIght?style=flat-square&color=green&label=Latest%20Release)](https://github.com/joelewis012/CSIght/releases/latest)
-[![Stars](https://img.shields.io/github/stars/joelewis012/CSIght?style=flat-square&color=yellow)](https://github.com/joelewis012/CSIght/stargazers)
-[![Forks](https://img.shields.io/github/forks/joelewis012/CSIght?style=flat-square&color=blue)](https://github.com/joelewis012/CSIght/network/members)
+[![Release](https://img.shields.io/github/v/release/joelewis012/CSIght?style=flat-square&color=green&label=Latest%20Release&cacheSeconds=3600)](https://github.com/joelewis012/CSIght/releases/latest)
+[![Stars](https://img.shields.io/github/stars/joelewis012/CSIght?style=flat-square&color=yellow&cacheSeconds=3600)](https://github.com/joelewis012/CSIght/stargazers)
+[![Forks](https://img.shields.io/github/forks/joelewis012/CSIght?style=flat-square&color=blue&cacheSeconds=3600)](https://github.com/joelewis012/CSIght/network/members)
 [![Firmware: Official](https://img.shields.io/badge/firmware-Official-blue?style=flat-square)]()
 [![Firmware: Momentum](https://img.shields.io/badge/firmware-Momentum-purple?style=flat-square)]()
 [![Firmware: Unleashed](https://img.shields.io/badge/firmware-Unleashed-red?style=flat-square)]()
@@ -155,25 +155,47 @@ CSIght/
 └── esp32/
     ├── esp32/        ← WROOM-32, NodeMCU, most 3-in-1 boards
     ├── esp32s3/      ← S3 DevKit, XIAO-S3, TinyS3
-    ├── esp32c3/      ← C3 Mini, XIAO-C3
+    ├── esp32c3/      ← C3 Mini, XIAO-C3, C3 Super Mini
     └── esp32c6/      ← C6 DevKit, XIAO-C6
 ```
 
+---
+
 ### 2. Flash the ESP32
 
-See **[FLASH_INSTRUCTIONS.md](FLASH_INSTRUCTIONS.md)** for the full guide and wiring diagram.
+#### Option A — Easy (GUI, no install needed) ✅ Recommended for beginners
 
-Quick start:
+1. Open **Chrome or Edge** (must be Chromium-based)
+2. Go to **[ESP Web Flasher](https://espressif.github.io/esptool-js/)**
+3. Click **Connect** and select your ESP32 from the popup
+4. Click **Program**, add each `.bin` file with the correct address:
+
+| File | Address |
+|------|---------|
+| `bootloader.bin` | `0x1000` |
+| `partition-table.bin` | `0x8000` |
+| `csight_esp32.bin` | `0x10000` |
+
+5. Click **Program** and wait for it to finish
+6. Press **Reset** on the board
+
+> ⚠️ ESP Web Flasher only works in Chrome or Edge — not Safari or Firefox
+
+#### Option B — Command line (esptool)
 
 ```bash
 pip install esptool
 
-esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 \
+esptool.py --chip auto --port /dev/ttyUSB0 --baud 460800 \
   write_flash \
   0x1000  bootloader.bin \
   0x8000  partition-table.bin \
   0x10000 csight_esp32.bin
 ```
+
+Replace `/dev/ttyUSB0` with your port — see [FLASH_INSTRUCTIONS.md](FLASH_INSTRUCTIONS.md) for full details and port finding instructions.
+
+---
 
 ### 3. Install the FAP
 
@@ -185,6 +207,8 @@ SD Card/apps/GPIO/csight.fap
 
 Launch from **Apps → GPIO → CSIght**.
 
+---
+
 ### 4. Wire it up
 
 | ESP32 pin | Flipper GPIO |
@@ -194,7 +218,9 @@ Launch from **Apps → GPIO → CSIght**.
 | GND | GND |
 | 3.3V | 3.3V |
 
-Pins are configurable inside the app — saved to SD, set once.
+> ⚠️ Power your ESP32 board **before** launching CSIght on the Flipper. The app will warn you if you forget.
+
+Pins are configurable inside the app and saved to SD card — set once, never again.
 
 ---
 
@@ -218,10 +244,8 @@ ufbt
 
 | Version | Feature |
 |---------|---------|
-| v1.1 | C3 Super Mini + more board presets |
-| v1.2 | Standalone Web UI — ESP32 hosts radar in browser, no Flipper needed |
-| v1.3 | Flipper Web UI toggle — switch between Flipper display and browser via QR code |
-| v1.4 | ESP32 screen support — M5Stack, TTGO T-Display, Lilygo T-Display S3 |
+| v1.1 | C3 Super Mini + expanded board presets |
+| v1.4 | Standalone Web UI (no Flipper needed) + Flipper Web UI toggle + ESP32 screen support (M5Stack, TTGO, Lilygo) |
 | v1.x | Breathing detection (experimental) |
 | v2.0 | Multi-ESP32 node support for true directional radar |
 | v2.1 | ESP32-C5 support (requires ESP-IDF v5.5) |
