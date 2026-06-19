@@ -55,25 +55,28 @@ static void draw_circle(Canvas* c, int cx, int cy, int r) {
 void csight_draw_boot(Canvas* c, CSIghtApp* app) {
     canvas_clear(c);
 
+    // Radar on left side
+    int rcx = 32, rcy = 36, rr = 26;
+    int angle = (app->boot_frame * 4) % 64;
+    int lx = rcx + (COS64[angle] * rr) / 59;
+    int ly = rcy + (SIN64[angle] * rr) / 59;
+    draw_circle(c, rcx, rcy, rr);
+    draw_circle(c, rcx, rcy, rr / 2);
+    canvas_draw_dot(c, rcx, rcy);
+    canvas_draw_line(c, rcx, rcy, lx, ly);
+
+    // Text on right side — no overlap
     canvas_set_font(c, FontPrimary);
-    draw_centered_str(c, 14, "CSIght");
+    canvas_draw_str(c, 68, 18, "CSIght");
 
     canvas_set_font(c, FontSecondary);
 
-    char dots[4] = "   ";
+    char dots[5] = "    ";
     uint8_t d = app->boot_frame % 4;
     for(uint8_t i = 0; i < d; i++) dots[i] = '.';
-    char line[24];
-    snprintf(line, sizeof(line), "INITIALIZING%s", dots);
-    draw_centered_str(c, 28, line);
-
-    int angle = (app->boot_frame * 4) % 64;
-    int lx = RADAR_CX + (COS64[angle] * RADAR_R) / 59;
-    int ly = RADAR_CY + (SIN64[angle] * RADAR_R) / 59;
-    draw_circle(c, RADAR_CX, RADAR_CY, RADAR_R);
-    canvas_draw_line(c, RADAR_CX, RADAR_CY, lx, ly);
-
-    draw_centered_str(c, 56, "WiFi CSI Radar");
+    canvas_draw_str(c, 68, 32, dots);
+    canvas_draw_str(c, 62, 46, "WiFi CSI");
+    canvas_draw_str(c, 68, 57, "Radar");
 }
 
 // ─── Power warning screen ─────────────────────────────────────────────────────
@@ -290,32 +293,172 @@ void csight_draw_waterfall(Canvas* c, CSIghtApp* app) {
     canvas_draw_str(c, SCREEN_W - 18, SCREEN_H - 1, sens_str);
 }
 
+// ─── Main menu ────────────────────────────────────────────────────────────────
+static const char* MAIN_MENU_LABELS[MAIN_MENU_COUNT] = {
+    "Start Scanning",
+    "Web UI",
+    "Settings",
+    "About",
+};
+
+void csight_draw_main_menu(Canvas* c, CSIghtApp* app) {
+    canvas_clear(c);
+
+    // Header
+    canvas_set_font(c, FontPrimary);
+    canvas_draw_str(c, 2, 10, "CSIght");
+    canvas_draw_line(c, 0, 12, SCREEN_W, 12);
+
+    canvas_set_font(c, FontSecondary);
+
+    for(int i = 0; i < MAIN_MENU_COUNT; i++) {
+        int y = 24 + i * 12;
+        bool selected = (i == (int)app->menu_idx);
+
+        if(selected) {
+            canvas_draw_box(c, 0, y - 9, SCREEN_W, 11);
+            canvas_set_color(c, ColorWhite);
+        }
+
+        // Arrow indicator
+        if(selected) canvas_draw_str(c, 2, y, ">");
+        canvas_draw_str(c, 12, y, MAIN_MENU_LABELS[i]);
+
+        // Show web UI status on that item
+        if(i == (int)MenuItemWebUI) {
+            const char* status = app->web_ui_active ? "[ON]" : "[OFF]";
+            int sw = canvas_string_width(c, status);
+            canvas_draw_str(c, SCREEN_W - sw - 2, y, status);
+        }
+
+        if(selected) canvas_set_color(c, ColorBlack);
+    }
+}
+
+// ─── About screen ─────────────────────────────────────────────────────────────
+void csight_draw_about(Canvas* c, CSIghtApp* app) {
+    canvas_clear(c);
+
+    canvas_set_font(c, FontPrimary);
+    draw_centered_str(c, 10, "CSIght v1.4");
+    canvas_draw_line(c, 0, 13, SCREEN_W, 13);
+
+    canvas_set_font(c, FontSecondary);
+    draw_centered_str(c, 25, "WiFi CSI Radar");
+    draw_centered_str(c, 35, "for Flipper Zero");
+
+    if(app->chip_name[0] != '\0') {
+        char chip_line[32];
+        snprintf(chip_line, sizeof(chip_line), "Board: %s", app->chip_name);
+        draw_centered_str(c, 48, chip_line);
+        const char* tier = app->csi_support == 2 ? "CSI: Full" :
+                           app->csi_support == 1 ? "CSI: Limited" : "CSI: None";
+        draw_centered_str(c, 58, tier);
+    } else {
+        draw_centered_str(c, 48, "github.com/");
+        draw_centered_str(c, 58, "joelewis012/CSIght");
+    }
+}
+
+// ─── Settings menu ────────────────────────────────────────────────────────────
+static const char* SETTINGS_LABELS[SETTINGS_COUNT] = {
+    "Sensitivity",
+    "Change Board",
+};
+
+void csight_draw_settings(Canvas* c, CSIghtApp* app) {
+    canvas_clear(c);
+
+    canvas_set_font(c, FontPrimary);
+    canvas_draw_str(c, 2, 10, "SETTINGS");
+    canvas_draw_line(c, 0, 12, SCREEN_W, 12);
+
+    canvas_set_font(c, FontSecondary);
+
+    for(int i = 0; i < SETTINGS_COUNT; i++) {
+        int y = 24 + i * 14;
+        bool selected = (i == (int)app->settings_idx);
+
+        if(selected) {
+            canvas_draw_box(c, 0, y - 9, SCREEN_W, 12);
+            canvas_set_color(c, ColorWhite);
+        }
+
+        canvas_draw_str(c, 4, y, SETTINGS_LABELS[i]);
+
+        // Show current value on right side
+        char val[16] = "";
+        if(i == 0) snprintf(val, sizeof(val), "%d", app->sensitivity);
+        if(i == 1) snprintf(val, sizeof(val), ">");
+
+        int vw = canvas_string_width(c, val);
+        canvas_draw_str(c, SCREEN_W - vw - 4, y, val);
+
+        if(selected) canvas_set_color(c, ColorBlack);
+    }
+
+    canvas_draw_str(c, 2, SCREEN_H - 1, "[OK] Select  [Back] Return");
+}
+
+// ─── Web UI screen — shown when browser mode is active ───────────────────────
+void csight_draw_webui(Canvas* c, CSIghtApp* app) {
+    UNUSED(app);
+    canvas_clear(c);
+
+    canvas_set_font(c, FontPrimary);
+    draw_centered_str(c, 10, "WEB UI ACTIVE");
+    canvas_draw_line(c, 0, 13, SCREEN_W, 13);
+
+    canvas_set_font(c, FontSecondary);
+    draw_centered_str(c, 24, "Connect your phone to:");
+    draw_centered_str(c, 34, "WiFi: CSIght");
+    draw_centered_str(c, 44, "Pass: csight123");
+    canvas_draw_line(c, 0, 48, SCREEN_W, 48);
+    draw_centered_str(c, 57, "http://192.168.4.1");
+
+    // Animated dots to show it's alive
+    char dots[4] = "   ";
+    uint8_t d = (app->boot_frame / 10) % 4;
+    for(uint8_t i = 0; i < d; i++) dots[i] = '.';
+    canvas_draw_str(c, 2, 64, dots);
+    canvas_draw_str(c, SCREEN_W - 40, 64, "[OK] Stop");
+}
+
 // ─── Proximity display ────────────────────────────────────────────────────────
 void csight_draw_proximity(Canvas* c, CSIghtApp* app) {
     canvas_clear(c);
 
-    canvas_set_font(c, FontPrimary);
-    draw_centered_str(c, 10, "CSIght");
-
+    // Header
     canvas_set_font(c, FontSecondary);
-    draw_centered_str(c, 20, "PROXIMITY");
+    canvas_draw_str(c, 2, 8, "CSIght");
+    canvas_draw_str(c, 80, 8, "PROXIMITY");
+    canvas_draw_line(c, 0, 10, SCREEN_W, 10);
 
-    int max_r = 26;
+    // Concentric arcs — centered, clear of header and bottom bar
+    int cx = SCREEN_W / 2;
+    int cy = 34;
+    int max_r = 22;
     int r = max_r - (app->proximity * max_r) / 100;
     if(r < 3) r = 3;
 
     for(int i = 0; i < 3; i++) {
         int ar = r + i * 7;
-        if(ar <= max_r) draw_circle(c, SCREEN_W / 2, 42, ar);
+        if(ar <= max_r + 7) draw_circle(c, cx, cy, ar);
     }
 
-    canvas_draw_box(c, SCREEN_W / 2 - 1, 41, 3, 3);
+    // Center dot
+    canvas_draw_box(c, cx - 1, cy - 1, 3, 3);
 
+    // Percentage — clear space below arcs
     char pct[8];
     snprintf(pct, sizeof(pct), "%d%%", app->proximity);
-    draw_centered_str(c, 62, pct);
+    canvas_set_font(c, FontPrimary);
+    draw_centered_str(c, 52, pct);
 
-    canvas_draw_frame(c, 2, SCREEN_H - 8, SCREEN_W - 4, 6);
-    int bar_w = (app->motion_intensity * (SCREEN_W - 6)) / 255;
-    if(bar_w > 0) canvas_draw_box(c, 3, SCREEN_H - 7, bar_w, 4);
+    // Motion bar at bottom
+    canvas_set_font(c, FontSecondary);
+    canvas_draw_str(c, 2, 62, "SIG");
+    canvas_draw_frame(c, 20, 56, SCREEN_W - 22, 7);
+    int bar_w = (app->motion_intensity * (SCREEN_W - 24)) / 255;
+    if(bar_w > 0) canvas_draw_box(c, 21, 57, bar_w, 5);
 }
