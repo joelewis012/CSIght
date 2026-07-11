@@ -251,8 +251,10 @@ void csight_heatmap_add(CSIghtApp* app, int16_t x_cm, int16_t y_cm) {
 
     int gx = ((x_cm - min_x) * HEATMAP_GRID) / span_x;
     int gy = ((y_cm - min_y) * HEATMAP_GRID) / span_y;
-    if(gx < 0) gx = 0; if(gx >= HEATMAP_GRID) gx = HEATMAP_GRID - 1;
-    if(gy < 0) gy = 0; if(gy >= HEATMAP_GRID) gy = HEATMAP_GRID - 1;
+    if(gx < 0) gx = 0;
+    if(gx >= HEATMAP_GRID) gx = HEATMAP_GRID - 1;
+    if(gy < 0) gy = 0;
+    if(gy >= HEATMAP_GRID) gy = HEATMAP_GRID - 1;
 
     // Add heat, capped at 255. Neighbouring cells get a smaller bump too —
     // avoids a single hard pixel-sized dot and better reflects that the

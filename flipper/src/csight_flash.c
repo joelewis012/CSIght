@@ -386,9 +386,10 @@ static int32_t flash_thread_fn(void* ctx) {
 
 // ─── Public entry point ───────────────────────────────────────────────────────
 // Called from handle_input when user confirms bootloader mode is active.
-static void flash_thread_cleanup(FuriThreadState state, void* ctx) {
+static void flash_thread_cleanup(FuriThread* thread, FuriThreadState state, void* context) {
+    UNUSED(context);
     if(state == FuriThreadStateStopped) {
-        furi_thread_free((FuriThread*)ctx);
+        furi_thread_free(thread);
     }
 }
 
@@ -401,7 +402,7 @@ void csight_flash_start(CSIghtApp* app) {
     memset(app->flash_error,  0, sizeof(app->flash_error));
 
     FuriThread* t = furi_thread_alloc_ex("csight_flash", 4096, flash_thread_fn, app);
-    furi_thread_set_state_callback(t, flash_thread_cleanup, t);
+    furi_thread_set_state_callback(t, flash_thread_cleanup);
     furi_thread_start(t);
     // Cleaned up in flash_thread_cleanup when thread stops
 }

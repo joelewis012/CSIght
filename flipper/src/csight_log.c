@@ -39,7 +39,7 @@ void csight_log_init(CSIghtApp* app) {
 void csight_log_event(CSIghtApp* app, const char* event, const char* detail) {
     if(!app->log_enabled) return;
 
-    char ts[24];
+    char ts[32]; // generous margin over GCC's worst-case field-width estimate
     format_timestamp(ts, sizeof(ts));
 
     char line[128];
