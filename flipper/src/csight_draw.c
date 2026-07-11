@@ -253,9 +253,10 @@ void csight_draw_radar(Canvas* c, CSIghtApp* app) {
     // Session stats: elapsed time + event count
     uint32_t elapsed_s = (furi_get_tick() - app->session_start_tick) /
                           furi_kernel_get_tick_frequency();
-    char stats[20];
+    char stats[40]; // generous margin — 3 uint32_t values at worst case
     snprintf(stats, sizeof(stats), "%02lu:%02lu  #%lu",
-             elapsed_s / 60, elapsed_s % 60, app->motion_count);
+             (unsigned long)(elapsed_s / 60), (unsigned long)(elapsed_s % 60),
+             (unsigned long)app->motion_count);
     canvas_draw_str(c, px, 19, stats);
 
     canvas_draw_str(c, px, 30, "MOTION");
@@ -751,11 +752,12 @@ void csight_draw_mesh(Canvas* c, CSIghtApp* app) {
         if(age_s < best_age_s) { best_age_s = age_s; best_node = n; }
     }
     if(best_node >= 0) {
-        char age_str[16];
+        char age_str[32]; // generous margin — GCC's format-truncation check
+                           // assumes best_node could be any int, not just 1-3
         if(best_age_s < 60) {
-            snprintf(age_str, sizeof(age_str), "N%d %lus", best_node, best_age_s);
+            snprintf(age_str, sizeof(age_str), "N%d %lus", best_node, (unsigned long)best_age_s);
         } else {
-            snprintf(age_str, sizeof(age_str), "N%d %lum", best_node, best_age_s / 60);
+            snprintf(age_str, sizeof(age_str), "N%d %lum", best_node, (unsigned long)(best_age_s / 60));
         }
         canvas_draw_str(c, sx, 58, age_str);
     }

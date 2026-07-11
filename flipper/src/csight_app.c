@@ -504,9 +504,9 @@ static void handle_input(CSIghtApp* app, InputKey key, InputType type) {
                 csight_config_save(app);
                 uint32_t elapsed_s = (furi_get_tick() - app->session_start_tick) /
                                       furi_kernel_get_tick_frequency();
-                char detail[32];
+                char detail[48]; // generous margin for two uint32_t values at worst case
                 snprintf(detail, sizeof(detail), "%lus, %lu events",
-                         elapsed_s, app->motion_count);
+                         (unsigned long)elapsed_s, (unsigned long)app->motion_count);
                 csight_log_event(app, "SESSION_END", detail);
                 app->state = AppStateMainMenu;
             }
