@@ -1,0 +1,24 @@
+menu "CSIght Mesh Configuration"
+
+    choice CSIGHT_ROLE
+        prompt "Node role"
+        default CSIGHT_ROLE_PRIMARY
+        help
+            Primary: wired to a Flipper Zero via UART, runs the full CSIght
+            feature set (radar, waterfall, vitals, web UI) and aggregates
+            readings from any secondary nodes on the network.
+
+            Secondary: standalone unit with no Flipper attached. Detects
+            motion locally and broadcasts readings to the primary over
+            ESP-NOW. All secondary units use the same firmware image —
+            v2.1 auto-discovery assigns each one an ID based on its unique
+            factory MAC address, no manual per-unit configuration needed.
+
+        config CSIGHT_ROLE_PRIMARY
+            bool "Primary (wired to Flipper)"
+
+        config CSIGHT_ROLE_SECONDARY
+            bool "Secondary (standalone, auto-discovered)"
+    endchoice
+
+endmenu

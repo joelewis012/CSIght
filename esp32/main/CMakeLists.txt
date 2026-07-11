@@ -8,6 +8,10 @@ idf_component_register(
         driver
         esp_system
         freertos
+        esp_http_server
+        json
     PRIV_REQUIRES
         csi_handler
+        web_ui
+        mesh_node
 )
