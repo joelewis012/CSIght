@@ -144,9 +144,6 @@ static void wifi_csi_cb(void *ctx, wifi_csi_info_t *info) {
             break;
         }
 
-        case 2: // proximity — same path as motion, handled above
-            break;
-
         case 3: // vitals — breathing & heart rate via EMA-diff bandpass
             vitals_update(amp, n_sub);
             break;
