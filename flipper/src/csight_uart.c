@@ -97,7 +97,7 @@ static int32_t uart_rx_thread(void* ctx) {
                         snprintf(detail, sizeof(detail), "intensity=%d", intensity);
                         csight_log_event(app, "ALERT", detail);
                     } else {
-                        notification_message(app->notifications, &sequence_short_vibro);
+                        notification_message(app->notifications, &sequence_single_vibro);
                     }
                     break;
                 }
