@@ -8,19 +8,40 @@
 
 static const char *TAG = "csi_handler";
 
+// Forward declaration — defined after wifi_csi_cb
+static void vitals_update(float *amp, int n_sub);
+
 // ─── State ────────────────────────────────────────────────────────────────────
 static csi_motion_cb_t    s_motion_cb    = NULL;
 static csi_waterfall_cb_t s_waterfall_cb = NULL;
+static csi_vitals_cb_t    s_vitals_cb    = NULL;
 static uint8_t            s_sensitivity  = 5;
 static uint8_t            s_mode         = 0;
 
 // ─── Baseline state ───────────────────────────────────────────────────────────
 #define CSI_BUF_LEN      64
 #define BASELINE_FRAMES  30
+#define WF_COLS          32  // waterfall output bins
 
 static float s_baseline[CSI_BUF_LEN];
 static int   s_frame_count   = 0;
 static bool  s_baseline_done = false;
+
+// ─── Vitals DSP state ─────────────────────────────────────────────────────────
+// Uses EMA-diff bandpass: breathing = med_ema - long_ema (0.1–0.5 Hz)
+//                         heart     = short_ema - med_ema  (0.5–3 Hz)
+// Zero-crossing count over 30-second windows → BPM
+#define VITALS_WINDOW_FRAMES  300   // ~30s at approx 10 fps (beacon rate)
+
+static float   s_amp_long_ema        = 0.0f; // alpha=0.01 → ~10s TC (DC removal)
+static float   s_amp_med_ema         = 0.0f; // alpha=0.05 → ~2s TC  (breathing upper)
+static float   s_amp_short_ema       = 0.0f; // alpha=0.30 → ~0.3s TC (heart upper)
+static bool    s_vitals_ema_init     = false;
+static bool    s_breath_prev_pos     = false;
+static bool    s_heart_prev_pos      = false;
+static int     s_breath_cross_count  = 0;
+static int     s_heart_cross_count   = 0;
+static int     s_vitals_frame_count  = 0;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 static float sensitivity_to_threshold(uint8_t sens) {
@@ -106,8 +127,7 @@ static void wifi_csi_cb(void *ctx, wifi_csi_info_t *info) {
 
         case 1: // waterfall
         {
-            // Compress n_sub bins → 32 output bins
-            #define WF_COLS 32
+            // Compress n_sub bins → WF_COLS output bins
             uint8_t out[WF_COLS];
             memset(out, 0, sizeof(out));
             int bins_per_col = n_sub / WF_COLS;
@@ -124,9 +144,67 @@ static void wifi_csi_cb(void *ctx, wifi_csi_info_t *info) {
             break;
         }
 
+        case 2: // proximity — same path as motion, handled above
+            break;
+
+        case 3: // vitals — breathing & heart rate via EMA-diff bandpass
+            vitals_update(amp, n_sub);
+            break;
+
         default:
             break;
     }
+}
+
+// ─── Vitals DSP — EMA-diff bandpass + zero-crossing counter ──────────────────
+static void vitals_update(float *amp, int n_sub) {
+    float amp_avg = 0.0f;
+    for(int i = 0; i < n_sub; i++) amp_avg += amp[i];
+    amp_avg /= (float)n_sub;
+
+    if(!s_vitals_ema_init) {
+        s_amp_long_ema    = amp_avg;
+        s_amp_med_ema     = amp_avg;
+        s_amp_short_ema   = amp_avg;
+        s_vitals_ema_init = true;
+    }
+
+    // One-pole IIR lowpass at three timescales
+    s_amp_long_ema  = 0.99f * s_amp_long_ema  + 0.01f * amp_avg; // ~10s TC
+    s_amp_med_ema   = 0.95f * s_amp_med_ema   + 0.05f * amp_avg; // ~2s TC
+    s_amp_short_ema = 0.70f * s_amp_short_ema + 0.30f * amp_avg; // ~0.3s TC
+
+    // Bandpass via subtraction of adjacent lowpass outputs
+    float breath_signal = s_amp_med_ema   - s_amp_long_ema;  // 0.1–0.5 Hz band
+    float heart_signal  = s_amp_short_ema - s_amp_med_ema;   // 0.5–3.0 Hz band
+
+    // Count upward zero-crossings — each = one complete oscillation cycle
+    bool breath_pos = (breath_signal >= 0.0f);
+    if(breath_pos && !s_breath_prev_pos) s_breath_cross_count++;
+    s_breath_prev_pos = breath_pos;
+
+    bool heart_pos = (heart_signal >= 0.0f);
+    if(heart_pos && !s_heart_prev_pos) s_heart_cross_count++;
+    s_heart_prev_pos = heart_pos;
+
+    if(++s_vitals_frame_count < VITALS_WINDOW_FRAMES) return;
+
+    // 30-second window complete — compute BPM and report
+    uint8_t breathing_bpm = (uint8_t)((s_breath_cross_count * 60) / 30);
+    uint8_t heart_bpm     = (uint8_t)((s_heart_cross_count  * 60) / 30);
+
+    // Clamp to physiological ranges; 0 = no valid reading
+    if(breathing_bpm < 6  || breathing_bpm > 40)  breathing_bpm = 0;
+    if(heart_bpm     < 40 || heart_bpm     > 180) heart_bpm     = 0;
+
+    ESP_LOGI(TAG, "Vitals: breath=%d BPM  heart=%d BPM (exp)",
+             breathing_bpm, heart_bpm);
+
+    if(s_vitals_cb) s_vitals_cb(breathing_bpm, heart_bpm);
+
+    s_breath_cross_count = 0;
+    s_heart_cross_count  = 0;
+    s_vitals_frame_count = 0;
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -141,7 +219,7 @@ void csi_handler_init(csi_motion_cb_t motion_cb, csi_waterfall_cb_t waterfall_cb
     // ── CSI config varies significantly between chip families ─────────────────
     // ESP32-C6 and C61 use wifi_csi_acquire_config_t (renamed + different fields)
     // All other targets use wifi_csi_config_t with lltf_en/htltf_en etc
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61
+#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61 || CONFIG_IDF_TARGET_ESP32C5
     wifi_csi_acquire_config_t csi_cfg = {
         .enable              = 1,
         .acquire_csi_legacy  = 1,   // L-LTF (legacy preamble)
@@ -181,10 +259,26 @@ void csi_set_sensitivity(uint8_t level) {
 }
 
 void csi_set_mode(uint8_t mode) {
-    if(mode > 2) mode = 0;
-    s_mode          = mode;
+    if(mode > 3) mode = 0;
+    s_mode = mode;
+    csi_reset_baseline();
+    // Reset vitals DSP state when entering/leaving vitals mode
+    s_vitals_ema_init    = false;
+    s_breath_cross_count = 0;
+    s_heart_cross_count  = 0;
+    s_vitals_frame_count = 0;
+    s_breath_prev_pos    = false;
+    s_heart_prev_pos     = false;
+    ESP_LOGI(TAG, "Mode -> %d", mode);
+}
+
+void csi_reset_baseline(void) {
     s_baseline_done = false;
     s_frame_count   = 0;
     memset(s_baseline, 0, sizeof(s_baseline));
-    ESP_LOGI(TAG, "Mode -> %d, recalibrating...", mode);
+    ESP_LOGI(TAG, "Baseline reset");
+}
+
+void csi_set_vitals_cb(csi_vitals_cb_t cb) {
+    s_vitals_cb = cb;
 }
