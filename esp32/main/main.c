@@ -15,6 +15,12 @@
 #include "web_ui.h"
 #include "mesh_node.h"
 
+// ESP-IDF has no built-in equivalent to Furi's UNUSED() macro used throughout
+// the Flipper side of this project — define our own so the same pattern works here.
+#ifndef UNUSED
+#define UNUSED(x) ((void)(x))
+#endif
+
 static const char *TAG = "CSIght";
 
 // ─── UART config ──────────────────────────────────────────────────────────────
