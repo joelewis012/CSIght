@@ -37,3 +37,7 @@ CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
 
 # NVS
 CONFIG_NVS_ENCRYPTION=n
+
+# HTTP Server — WebSocket support is opt-in in ESP-IDF, required for the
+# web UI's live radar/vitals/mesh streaming over /ws
+CONFIG_HTTPD_WS_SUPPORT=y
