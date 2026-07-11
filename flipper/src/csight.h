@@ -2,7 +2,9 @@
 #include <furi.h>
 #include <furi_hal.h>
 #include <gui/gui.h>
+#include <gui/view_port.h>
 #include <storage/storage.h>
+#include <notification/notification_messages.h>
 
 // ─── Protocol ────────────────────────────────────────────────────────────────
 #define PROTO_HANDSHAKE_REQ  0xAA
