@@ -1,100 +1,74 @@
-# CSIght — ESP32 Flash Instructions
+# CSIght — Flashing the ESP32
 
-## ⚠️ Read before flashing
-
-- **Never** interrupt power during flashing
-- **Never** modify bootloader partitions manually
-- If something goes wrong the ESP32 can almost always be recovered — see Recovery below
+There are three ways to flash. Option A is the easiest and requires nothing installed.
 
 ---
 
-## Step 1 — Find your chip
+## Option A — From your Flipper Zero (no computer needed) ✅
 
-| Your board | Chip | Firmware folder |
-|------------|------|-----------------|
-| FZ WiFi Dev Board, FlipMods, FEBERIS, Marauder, any ESP32-WROOM-32 | ESP32 | `esp32/esp32/` |
-| ESP32-S3 DevKit, XIAO-S3, TinyS3, FeatherS3 | ESP32-S3 | `esp32/esp32s3/` |
-| ESP32-C3 Mini, XIAO-C3, LOLIN C3 | ESP32-C3 | `esp32/esp32c3/` |
-| ESP32-C6 DevKit, XIAO-C6 | ESP32-C6 | `esp32/esp32c6/` |
+1. Copy the release ZIP to your Flipper SD card, keeping the folder structure intact
+2. Open **CSIght → Flash Firmware** on the Flipper
+3. On your ESP32: hold **BOOT**, press **RESET**, release **BOOT**
+4. Press **OK** on the Flipper — it flashes bootloader, partition table and firmware automatically
+5. ESP32 reboots into CSIght when done
 
 ---
 
-## Step 2 — Install esptool
+## Option B — Browser (no install required)
+
+1. Open **Chrome or Edge** (must be Chromium — Safari and Firefox won't work)
+2. Go to **https://espressif.github.io/esptool-js/**
+3. Set baud rate to **460800** → **Connect** → select your board
+4. Under **Flash**, add the three files with the addresses below
+5. Click **Program** → press **RESET** on the board when done
+
+### Flash addresses by chip
+
+| Chip | `bootloader.bin` | `partitions.bin` | `firmware.bin` |
+|------|-----------------|-----------------|---------------|
+| ESP32 classic | `0x1000` | `0x8000` | `0x10000` |
+| ESP32-S2 | `0x1000` | `0x8000` | `0x10000` |
+| ESP32-S3 | `0x0000` | `0x8000` | `0x10000` |
+| ESP32-C3 | `0x0000` | `0x8000` | `0x10000` |
+| ESP32-C6 / C61 | `0x0000` | `0x8000` | `0x10000` |
+| ESP32-C5 | `0x0000` | `0x8000` | `0x10000` |
+
+### Which firmware folder is mine?
+
+| Board | Chip | Folder |
+|-------|------|--------|
+| FZ WiFi Dev Board, FlipMods Mini WiFi, Adafruit Feather S2, QT Py S2, LOLIN S2 Mini, FeatherS2, TinyS2 | ESP32-S2 | `esp32/esp32s2/` |
+| WROOM-32, NodeMCU, TTGO T-Display, M5Stack Core, HUZZAH32, FlipMods Combo, Marauder boards | ESP32 | `esp32/esp32/` |
+| S3 DevKitC/M, XIAO-S3, TinyS3, FeatherS3, ProS3, CoreS3, TTGO T-Display S3 | ESP32-S3 | `esp32/esp32s3/` |
+| C3 DevKit, XIAO-C3, C3 Super Mini, LOLIN C3 Mini, M5Stamp C3 | ESP32-C3 | `esp32/esp32c3/` |
+| C6 DevKitC-1, C6 DevKitM-1, C61 DevKitC-1, XIAO-C6 | ESP32-C6/C61 | `esp32/esp32c6/` |
+| C5 DevKitC-1 | ESP32-C5 | `esp32/esp32c5/` |
+
+> **C5 note:** requires ESP-IDF v5.5.2 to build from source. Pre-built binary included in releases.
+> **Marauder note:** boards flashed with Marauder need reflashing before CSIght works. Marauder can be restored afterwards.
+
+---
+
+## Option C — esptool CLI
 
 ```bash
 pip install esptool
+
+# Classic ESP32
+esptool.py --chip auto --port /dev/ttyUSB0 --baud 460800 \
+  write_flash 0x1000 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin
+
+# S3, C3, C6, C5 (bootloader at 0x0)
+esptool.py --chip auto --port /dev/ttyUSB0 --baud 460800 \
+  write_flash 0x0 bootloader.bin 0x8000 partitions.bin 0x10000 firmware.bin
 ```
 
----
-
-## Step 3 — Flash
-
-Replace `FOLDER` with your chip folder from the table above (e.g. `esp32/esp32/`).
-Replace `PORT` with your serial port:
-- **macOS**: `/dev/cu.usbserial-XXXX` (find with `ls /dev/cu.*`)
-- **Linux**: `/dev/ttyUSB0` or `/dev/ttyACM0`
-- **Windows**: `COM3` (check Device Manager)
-
-```bash
-cd FOLDER
-
-esptool.py --chip auto --port PORT --baud 460800 \
-  write_flash \
-  0x1000  bootloader.bin \
-  0x8000  partition-table.bin \
-  0x10000 csight_esp32.bin
-```
-
-Or using the included flash_args file:
-
-```bash
-esptool.py --chip auto --port PORT write_flash @flash_args
-```
-
-Press **EN/RST** on the board after flashing to boot.
-
----
-
-## Step 4 — Wire to Flipper Zero
-
-| ESP32 pin | Flipper GPIO | Notes |
-|-----------|-------------|-------|
-| TX (default 17) | Pin 14 | Configurable in app |
-| RX (default 16) | Pin 13 | Configurable in app |
-| GND | GND | Required |
-| 3.3V or 5V | 3.3V or 5V | Power the board BEFORE launching app |
-
-> ⚠️ **Power the ESP32 board BEFORE launching CSIght on the Flipper.** Launching the app without the board powered will cause the Flipper to crash. CSIght will warn you about this on first launch.
-
----
-
-## Step 5 — Install the FAP
-
-Copy the `.fap` matching your Flipper firmware from the `flipper/` folder:
-
-```
-SD Card/apps/GPIO/csight.fap
-```
-
-Launch from **Apps → GPIO → CSIght**.
+**Finding your port:**
+- macOS/Linux: `ls /dev/tty.*` or `ls /dev/ttyUSB*`
+- Windows: Device Manager → Ports (COM & LPT)
 
 ---
 
 ## Recovery
 
-If flashing fails or the board seems bricked:
-
-```bash
-# Erase flash completely
-esptool.py --chip auto --port PORT erase_flash
-
-# Then re-flash from scratch
-```
-
-This resets the board to factory state. The bootloader is almost never truly bricked.
-
----
-
-## 3-in-1 board users (CC1101 + ESP32 + nRF24)
-
-Your board uses shared GPIO. Default pins 16/17 should be free for UART but if you experience issues use the Custom pin option in CSIght to change them. Your SPI toggle switch position does not affect CSIght — it only needs UART.
+If the ESP32 is bricked, hold **BOOT** during power-on and re-flash using Option B or C. The ROM bootloader is always recoverable this way.
