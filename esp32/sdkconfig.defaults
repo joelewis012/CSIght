@@ -17,8 +17,16 @@ CONFIG_FREERTOS_HZ=1000
 # Compiler — keep strict
 CONFIG_COMPILER_OPTIMIZATION_SIZE=y
 
-# Partition table — use default single-app, no OTA (safe for v1)
-CONFIG_PARTITION_TABLE_SINGLE_APP=y
+# Partition table — two OTA slots + otadata, enables wireless firmware
+# updates on the primary via the web dashboard (v3.1+).
+#
+# IMPORTANT: this changes the flash layout. Boards already flashed with an
+# older CSIght build (single-app partition table) MUST be fully re-flashed
+# once via USB/esptool or the Flipper's Flash Firmware feature before OTA
+# will work — you cannot OTA your way onto a new partition table, since the
+# bootloader itself needs the new partition map. After that one-time
+# re-flash, OTA updates work normally from then on.
+CONFIG_PARTITION_TABLE_TWO_OTA=y
 
 # NVS
 CONFIG_NVS_ENCRYPTION=n
