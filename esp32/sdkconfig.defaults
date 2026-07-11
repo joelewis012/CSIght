@@ -28,5 +28,12 @@ CONFIG_COMPILER_OPTIMIZATION_SIZE=y
 # re-flash, OTA updates work normally from then on.
 CONFIG_PARTITION_TABLE_TWO_OTA=y
 
+# Flash size — the two-OTA partition table needs more than the 2MB implicit
+# default. 4MB is the flash size on the overwhelming majority of ESP32 dev
+# boards; if you're on a genuinely smaller/older board, lower this and note
+# that OTA (which needs two full app copies) may not fit.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="4MB"
+
 # NVS
 CONFIG_NVS_ENCRYPTION=n
