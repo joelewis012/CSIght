@@ -2,8 +2,6 @@ Import("ENV")
 
 env = ENV
 
-sources = Glob("src/*.c")
-
 fap_sources = env.GlobRecursive("src/*.c")
 
 Return("fap_sources")

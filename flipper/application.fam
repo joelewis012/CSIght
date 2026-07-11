@@ -6,11 +6,12 @@ App(
     requires=[
         "gui",
         "storage",
+        "notification",
     ],
     stack_size=4 * 1024,
     fap_icon="images/csight_icon_10x10.png",
     fap_category="GPIO",
     fap_description="WiFi CSI radar — motion detection via ESP32",
     fap_author="CSIght",
-    fap_version="1.0",
+    fap_version="3.3",
 )
