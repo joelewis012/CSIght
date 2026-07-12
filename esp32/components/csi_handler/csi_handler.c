@@ -226,7 +226,6 @@ void csi_handler_init(csi_motion_cb_t motion_cb, csi_waterfall_cb_t waterfall_cb
         .acquire_csi_mu      = 0,
         .acquire_csi_dcm     = 0,
         .acquire_csi_beamformed = 0,
-        .acquire_csi_he_stbc = 0,
         .val_scale_cfg       = 0,
         .dump_ack_en         = 0,
     };
