@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
 
   # ─── ESP32 Firmware builds — one job per chip target ─────────────────────────
@@ -18,13 +21,23 @@ jobs:
       matrix:
         include:
           - target: esp32
+            idf_version: v5.2.1
             name: ESP32-WROOM-32 / NodeMCU / 3-in-1 boards
+          - target: esp32s2
+            idf_version: v5.2.1
+            name: FZ WiFi Dev Board / Adafruit Feather S2 / LOLIN S2 Mini
           - target: esp32s3
+            idf_version: v5.2.1
             name: ESP32-S3 DevKit / XIAO-S3 / TinyS3
           - target: esp32c3
+            idf_version: v5.2.1
             name: ESP32-C3 Mini / XIAO-C3
           - target: esp32c6
+            idf_version: v5.2.1
             name: ESP32-C6 DevKit / XIAO-C6
+          - target: esp32c5
+            idf_version: v5.5.2
+            name: ESP32-C5 DevKit (best CSI; requires IDF v5.5.2+)
 
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +45,7 @@ jobs:
       - name: Build firmware for ${{ matrix.target }}
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v5.2.1
+          esp_idf_version: ${{ matrix.idf_version }}
           target: ${{ matrix.target }}
           path: esp32
           command: idf.py build
@@ -129,6 +142,8 @@ jobs:
     name: Package Release
     needs: [build-esp32-firmware, build-fap-official, build-fap-momentum, build-fap-unleashed]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -152,7 +167,7 @@ jobs:
           find artifacts/csight-unleashed -name "*.fap" -exec cp {} release/CSIght/flipper/unleashed/ \; || true
 
           # ESP32 firmware — one folder per chip target
-          for TARGET in esp32 esp32s3 esp32c3 esp32c6; do
+          for TARGET in esp32 esp32s2 esp32s3 esp32c3 esp32c6 esp32c5; do
             mkdir -p "release/CSIght/esp32/$TARGET"
             if [ -d "artifacts/csight-firmware-$TARGET" ]; then
               cp artifacts/csight-firmware-$TARGET/* "release/CSIght/esp32/$TARGET/" || true
@@ -179,4 +194,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: CSIght-*.zip
-          generate_release_notes: true
+          generate_release_notes: false
